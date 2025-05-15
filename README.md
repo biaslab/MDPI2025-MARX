@@ -25,9 +25,8 @@ Currently, the results of our experiments take up considerable storage space (11
 We are actively working to minimize the storage space required for each monte carlo experiment.
 This means you have to run the experiments (~10 minutes per model and environment) before you can inspect the results stored in the `results` directory.
 
-Then, on OS X and Linux, run `./configure-pluto.sh` to update the Pluto notebooks, followed by `./run-pluto.sh`.
-On Windows, please run the commands listed in `configure-pluto.sh`, followed by the commands listed in `run-pluto.sh`.
-After running (the contents of) `run-pluto.sh`, a new browser tab should open with the url [http://localhost:1234/](http://localhost:1234/).
+Then, run `./run-pluto.sh` (OS X and Linux) or `julia --project=. -e 'using Pluto; Pluto.run()'` (Windows).
+A new browser tab should open with the url [http://localhost:1234/](http://localhost:1234/).
 
 There are two Pluto notebooks that let you inspect the experiments:
 
