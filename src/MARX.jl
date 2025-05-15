@@ -53,7 +53,8 @@ export record_surprisals!, record_vfes!, record_ces_posterior_prior!, record_ces
 export record_prediction_mean!, record_prediction_covariance!
 # Experiments
 export interact, train_test_run
-export monte_carlo_experiment, monte_carlo_experiment_T, monte_carlo_experiment_model_selection_Nys_Nus
+export monte_carlo_experiment, monte_carlo_experiment_T, monte_carlo_experiment_T_parallel, monte_carlo_experiment_T_parallel_live
+export load_experiment_results, prepare_experiment_data
 # Plotting
 export plot_controls, plot_observations, plot_trial_test_dream
 export plot_error

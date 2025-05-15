@@ -1870,6 +1870,28 @@ function plot_pdf_params(data::Vector{Tuple{String, Vector{Recorder}, Vector{MAR
     return p
 end
 
+function plot_pdf_params(data::Vector{Tuple{String, Vector{Recorder}, Vector{DoubleMassSpringDamperSystem}}}; f_name::Union{Nothing, String}=nothing, psize::Union{Nothing, Tuple}=nothing, xlabel::String="Training size T")
+    #p = plot(xlabel="time [s]", ylabel=latexstring("-\\log p(\\tilde{A}, \\tilde{W} \\mid D_t)"))
+    p = plot(xlabel="time [s]", ylabel=latexstring("-\\log p(\\tilde{\\Theta} \\mid \\mathcal{D}_k)"))
+    for (data_label, vrecs, vsys) in data
+        N_runs = size(vrecs)[1]
+        (D_y, D_x, N) = size(vrecs[1].Ms)
+        pdfs_AW = zeros(N_runs, N)
+        for i in 1:N_runs
+            rec = vrecs[i]
+            sys = vsys[i]
+            pdfs_AW[i,:] = [pdf_params(sys.A, sys.W, rec.Ms[:,:,t], rec.Λs[:,:,t], rec.Ωs[:,:,t], rec.νs[t], D_x, D_y) for t in 1:N ]
+        end
+        plot!(mean(pdfs_AW, dims=1)', ribbon=std(pdfs_AW, dims=1)', lw=DEFAULTS.linewidth, label=data_label)
+    end
+    plot!(size = isnothing(psize) ? (DEFAULTS.width_in*DEFAULTS.dpi,DEFAULTS.height_in*DEFAULTS.dpi) : psize)
+    plot!(tickfontsize = DEFAULTS.tickfontsize, guidefontsize = DEFAULTS.guidefontsize, legendfontsize = DEFAULTS.legendfontsize, titlefontsize = DEFAULTS.titlefontsize)
+    plot!(bottom_margin=8Plots.mm)
+    plot!(left_margin=8Plots.mm)
+    if !isnothing(f_name) savefig(f_name) end
+    return p
+end
+
 function plot_pdf_predictive(data::Vector{Tuple{String, Vector{Recorder}, Vector{MARXSystem}}}; f_name::Union{Nothing, String}=nothing, psize::Union{Nothing, Tuple}=nothing, xlabel::String="Training size T")
     #p = plot(xlabel="time [s]", ylabel="-log p(ŷ | Dₜ)")
     p = plot(xlabel="time [s]", ylabel=label_surprisals) #latexstring("-\\log p(\\tilde{y} \\mid \\mathcal{D}_k)"))
@@ -1923,8 +1945,9 @@ function plot_ces_posterior_prior(rec::Recorder; f_name::Union{Nothing, String}=
 end
 
 function plot_es_posterior(rec::Recorder; f_name::Union{Nothing, String}=nothing, psize::Union{Nothing, Tuple}=nothing)
+    N = size(rec.es_posterior)[1] # TODO: Fix off-by-one
     p = plot(xlabel="time [s]", ylabel=label_es_posterior)
-    plot!(rec.es_posterior, lw=DEFAULTS.linewidth, label=nothing)
+    plot!(rec.es_posterior[1:N-1], lw=DEFAULTS.linewidth, label=nothing)
     plot!(size = isnothing(psize) ? (DEFAULTS.width_in*DEFAULTS.dpi,DEFAULTS.height_in*DEFAULTS.dpi) : psize)
     plot!(tickfontsize = DEFAULTS.tickfontsize, titlefontsize = DEFAULTS.titlefontsize, legendfontsize = DEFAULTS.legendfontsize, guidefontsize = DEFAULTS.guidefontsize)
     plot!(bottom_margin=8Plots.mm, left_margin=8Plots.mm)
@@ -1933,12 +1956,13 @@ function plot_es_posterior(rec::Recorder; f_name::Union{Nothing, String}=nothing
 end
 
 function plot_ces_posterior_likelihood_kls_posterior_prior(rec::Recorder; f_name::Union{Nothing, String}=nothing, psize::Union{Nothing, Tuple}=nothing, show_surprisals::Bool=false)
+    N = size(rec.surprisals)[1] # TODO: fix off-by-one error N-1
     p = plot(xlabel="time [s]")
     if show_surprisals
-        plot!(rec.surprisals, lw=DEFAULTS.linewidth, label="surprisal", ls=:dash)
+        plot!(rec.surprisals[1:N-1], lw=DEFAULTS.linewidth, label="surprisal", ls=:dash)
     end
-    plot!(rec.ces_posterior_likelihood, lw=DEFAULTS.linewidth, label="accuracy")
-    plot!(rec.kls_posterior_prior, lw=DEFAULTS.linewidth, label="complexity")
+    plot!(rec.ces_posterior_likelihood[1:N-1], lw=DEFAULTS.linewidth, label="accuracy")
+    plot!(rec.kls_posterior_prior[1:N-1], lw=DEFAULTS.linewidth, label="complexity")
     plot!(size = isnothing(psize) ? (DEFAULTS.width_in*DEFAULTS.dpi,DEFAULTS.height_in*DEFAULTS.dpi) : psize)
     plot!(tickfontsize = DEFAULTS.tickfontsize, titlefontsize = DEFAULTS.titlefontsize, legendfontsize = DEFAULTS.legendfontsize, guidefontsize = DEFAULTS.guidefontsize)
     plot!(bottom_margin=8Plots.mm, left_margin=8Plots.mm)

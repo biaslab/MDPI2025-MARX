@@ -11,20 +11,28 @@ Updates will be pushed in the coming days.
 
 ## How do I run your experiments?
 
-On OS X and Linux, run `./install.sh` to install packages, `./configure-pluto.sh` to update the Pluto notebooks, then run `./run-pluto.sh` which should open a tab in your browser.
-On Windows, please run the commands listed in `install.sh` and `configure-pluto.sh`, followed by the commands listed in `run-pluto.sh`.
-Note that the code only has been tested with julia version `lts = 110.7`.
+To install the required Julia packages, run `./install.sh` (OS X and Linux) or `julia --project=. -e 'using Pkg; Pkg.activate("."); Pkg.instantiate()'` (Windows).
+
+To run the experiments, run `run-experiments.sh` (OS X and Linux) or `JULIA_NUM_THREADS=4 julia --project=. experiments-MARX.jl` and `JULIA_NUM_THREADS=$NUM_THREADS julia --project=. experiments-dmsds.jl` (Windows).
+Results will be stored in a directory called `results`.
+
+## How do I inspect the results of your experiments?
+
+We use [Pluto](https://plutojl.org/) notebooks to interactively inspect our models.
+
+Follow the instructions in the previous section to install required Julia packages.
+Currently, the results of our experiments take up considerable storage space (11 GB for one environment and the chosen three models; MARX-UI, MARX-WI, RLS).
+We are actively working to minimize the storage space required for each monte carlo experiment.
+This means you have to run the experiments (~10 minutes per model and environment) before you can inspect the results stored in the `results` directory.
+
+Then, on OS X and Linux, run `./configure-pluto.sh` to update the Pluto notebooks, followed by `./run-pluto.sh`.
+On Windows, please run the commands listed in `configure-pluto.sh`, followed by the commands listed in `run-pluto.sh`.
 After running (the contents of) `run-pluto.sh`, a new browser tab should open with the url [http://localhost:1234/](http://localhost:1234/).
 
-There are several Pluto notebooks that let you train and evaluate an MARX estimator:
+There are two Pluto notebooks that let you inspect the experiments:
 
-* `experiment-verification-MARX-train.jl` Train an agent for the MARX system (will save the agent, environment, and interaction data to `saves/`)
-* `experiment-verification-MARX-offline.jl` Test the MARX estimator and the least-squares estimator on a single run in an offline (batch) manner
-* `experiment-verification-MARX-testdream.jl` Test the MARX estimator on a single run, first feeding it real observations then predicted observations to its memory
-* `experiment-verification-MARX-montecarlo.jl` Test the MARX estimator and the least-squares estimator in several Monte Carlo experiments across a variety of training sizes
-* `experiment-validation-dmsds-train.jl` Train an agent for the double mass spring damper system (will save the agent, environment, and interaction data to `saves/`)
-* `experiment-validation-dmsds-offline.jl` Test the MARX estimator and the least-squares estimator on a single run in an offline (batch) manner
-* `experiment-validation-dmsds-testdream.jl` Test the MARX estimator and the least-squares estimator on a single run in an offline (batch) manner
+* `inspect-MARX.jl` lets you inspect the results for the MARX system
+* `inspect-dmsds.jl` lets you inspect the results for the double mass-spring-damper system
 
 ## How to I give feedback?
 

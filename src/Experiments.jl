@@ -12,10 +12,12 @@ using ..InteractionRecorder
 
 using Distributions # mean
 using JLD2 # saving stuff
-#using Threads # @threads
+using Base.Threads # @threads
+using Printf
 
 export interact, train_test_run
-export monte_carlo_experiment, monte_carlo_experiment_T, monte_carlo_experiment_model_selection_Nys_Nus
+export monte_carlo_experiment, monte_carlo_experiment_T, monte_carlo_experiment_T_parallel, monte_carlo_experiment_T_parallel_live
+export load_experiment_results, prepare_experiment_data
 
 function predict_and_record!(rec::Recorder, agent::Agent, t::Int, k::Int)
     # TODO: END react code
@@ -208,47 +210,122 @@ function monte_carlo_experiment(N_runs::Int, f_env::DataType, f_agent::DataType,
 end
 
 function monte_carlo_experiment_T(label_env::String, label_agent::String, Ts::Vector{Int}, N_runs::Int, f_env::DataType, f_agent::DataType, Δt::Float64, ulims::Tuple{Float64, Float64}, N_y::Int, N_u::Int, νadd::Int, cΩ::Float64, cΛ::Float64)
+    dir_results = "results/$(label_env)"
+    mkpath(dir_results)
     n_Ts = length(Ts)
     for (i, T) in enumerate(Ts)
         println("$label_env $label_agent $T")
         P = 2
         N = Int(T/P)
         agent, env_train, env_test, rec_train, rec_test, rmse = monte_carlo_experiment(N_runs, f_env, f_agent, N, P, Δt, ulims, N_y, N_u, νadd, cΩ, cΛ)
-        f_name = "results/$(label_env)/$(label_agent)_monte_carlo_T$(T).jld2"
+        f_name = "$(dir_results)/$(label_agent)_monte_carlo_T$(T).jld2"
         @save f_name agent=agent env_train=env_train env_test=env_test rec_train=rec_train rec_test=rec_test rmse=rmse
     end
 end
 
-function monte_carlo_experiment_T_old(Ts::Vector{Int}, N_runs::Int, f_env::DataType, f_agent::DataType, Δt::Float64, ulims::Tuple{Float64, Float64}, N_y::Int, N_u::Int, νadd::Int, cΩ::Float64, cΛ::Float64)
-    n_Ts = length(Ts)
-    D_y = get_observation_dim(f_env)
-    rmses = zeros(D_y, N_runs, n_Ts)
-    agents = Matrix{Agent}(undef, N_runs, n_Ts)
-    envs_train, envs_test = Matrix{f_env}(undef, N_runs, n_Ts), Matrix{f_env}(undef, N_runs, n_Ts)
-    recs_train, recs_test = Matrix{Recorder}(undef, N_runs, n_Ts), Matrix{Recorder}(undef, N_runs, n_Ts)
-    for (i, T) in enumerate(Ts)
+function monte_carlo_experiment_T_parallel(label_env::String, label_agent::String, Ts::Vector{Int}, N_runs::Int, f_env::DataType, f_agent::DataType, Δt::Float64, ulims::Tuple{Float64, Float64}, N_y::Int, N_u::Int, νadd::Int, cΩ::Float64, cΛ::Float64)
+    dir_results = "results/$(label_env)"
+    mkpath(dir_results)
+    n_threads = Threads.nthreads()
+    println("Executing $(n_threads) monte carlo runs in parallel.")
+
+    @threads for i in 1:length(Ts)
+        T = Ts[i]
+        println("Thread $(threadid()): $label_env $label_agent $T")
         P = 2
-        N = Int(T/P)
-        #println("$i $T $N_runs $N $P $N_y $N_u")
-        agents[:,i], envs_train[:,i], envs_test[:,i], recs_train[:,i], recs_test[:,i], rmses[:,:,i] = monte_carlo_experiment(N_runs, f_env, f_agent, N, P, Δt, ulims, N_y, N_u, νadd, cΩ, cΛ)
+        N = Int(T / P)
+        agent, env_train, env_test, rec_train, rec_test, rmse = monte_carlo_experiment(N_runs, f_env, f_agent, N, P, Δt, ulims, N_y, N_u, νadd, cΩ, cΛ)
+        f_name = "$(dir_results)/$(label_agent)_monte_carlo_T$(T).jld2"
+        @save f_name agent=agent env_train=env_train env_test=env_test rec_train=rec_train rec_test=rec_test rmse=rmse
     end
-    return agents, envs_train, envs_test, recs_train, recs_test, rmses
 end
 
-function monte_carlo_experiment_model_selection_Nys_Nus(Nys::Vector{Int}, Nus::Vector{Int}, N_runs::Int, f_env::DataType, f_agent::DataType, N::Int, P::Int, Δt::Float64, ulims::Tuple{Float64, Float64}, νadd::Int, cΩ::Float64, cΛ::Float64)
-    D_y = get_observation_dim(f_env)
-    n_Nys = length(Nys)
-    n_Nus = length(Nus)
-    rmses = zeros(D_y, N_runs, n_Nys, n_Nus)
-    agents = Array{Agent}(undef, N_runs, n_Nys, n_Nus)
-    envs_train, envs_test = Array{f_env}(undef, N_runs, n_Nys, n_Nus), Array{f_env}(undef, N_runs, n_Nys, n_Nus)
-    recs_train, recs_test = Array{Recorder}(undef, N_runs, n_Nys, n_Nus), Array{Recorder}(undef, N_runs, n_Nys, n_Nus)
-    for (i, N_y) in enumerate(Nys)
-        for (j, N_u) in enumerate(Nus)
-            agents[:,i,j], envs_train[:,i,j], envs_test[:,i,j], recs_train[:,i,j], recs_test[:,i,j], rmses[:,:,i,j] = monte_carlo_experiment(N_runs, f_env, f_agent, N, P, Δt, ulims, N_y, N_u, νadd, cΩ, cΛ)
+function monte_carlo_experiment_T_parallel_live(label_env::String, label_agent::String, Ts::Vector{Int}, N_runs::Int, f_env::DataType, f_agent::DataType, Δt::Float64, ulims::Tuple{Float64, Float64}, N_y::Int, N_u::Int, νadd::Int, cΩ::Float64, cΛ::Float64)
+    dir_results = "results/$(label_env)"
+    mkpath(dir_results)
+
+    n_threads = Threads.nthreads()
+    println("Executing $(n_threads) Monte Carlo runs in parallel.")
+
+    statuses = fill(:waiting, length(Ts))  # :waiting, :processing, :done
+    lck = ReentrantLock()
+
+    function print_statuses()
+        lock(lck) do
+            println("\e[H\e[J")  # Clear terminal (can also use specific line clearing)
+            println("$(label_env) $(label_agent)")
+            @printf("%-5s %-10s\n", "Idx", "Status")
+            println("---------------")
+            for (i, T) in enumerate(Ts)
+                status = statuses[i]
+                color_code = status == :processing ? "\e[33m" : status == :done ? "\e[32m" : "\e[90m"
+                @printf("%-5d %s%-10s\e[0m\n", T, color_code, Symbol(status))
+            end
         end
     end
-    return agents, envs_train, envs_test, recs_train, recs_test, rmses
+
+    # Start a background task to periodically print the table
+    printing_task = Threads.@spawn begin
+        while any(s -> s != :done, statuses)
+            print_statuses()
+            sleep(0.5)
+        end
+        print_statuses()
+    end
+
+    # Parallel processing
+    @threads for i in 1:length(Ts)
+        lock(lck) do
+            statuses[i] = :processing
+        end
+        T = Ts[i]
+        P = 2
+        N = Int(T / P)
+        agent, env_train, env_test, rec_train, rec_test, rmse = monte_carlo_experiment(N_runs, f_env, f_agent, N, P, Δt, ulims, N_y, N_u, νadd, cΩ, cΛ)
+        f_name = "$(dir_results)/$(label_agent)_monte_carlo_T$(T).jld2"
+        @save f_name agent=agent env_train=env_train env_test=env_test rec_train=rec_train rec_test=rec_test rmse=rmse
+        lock(lck) do
+            statuses[i] = :done
+        end
+    end
+
+    # Ensure final table is printed and task ends
+    wait(printing_task)
+end
+
+function load_experiment_results(f_env::DataType, label_agent::String, Ts::Vector{Int}, N_runs::Int, D_y::Int)
+    label_env = string(nameof(f_env))
+    n_Ts = length(Ts)
+    agents = Matrix{Agent}(undef, N_runs, n_Ts)
+    envs_train = Matrix{f_env}(undef, N_runs, n_Ts)
+    recs_train = Matrix{Recorder}(undef, N_runs, n_Ts)
+    rmses = zeros(D_y, N_runs, n_Ts)
+    for (i, T) in enumerate(Ts)
+        f_name = "results/$(label_env)/$(label_agent)_monte_carlo_T$(T).jld2"
+        data = load(f_name)
+        agents[:,i] = data["agent"]
+        envs_train[:,i] = data["env_train"]
+        recs_train[:,i] = data["rec_train"]
+        rmses[:,:,i] = data["rmse"]
+    end
+    return (agents, envs_train, recs_train, rmses)
+end
+
+function prepare_experiment_data(f_env::DataType, methods::Vector{String}, Ts::Vector{Int}, N_runs::Int, D_y::Int)
+    results = Dict{String, NamedTuple}()
+
+    for label in methods
+        agents, envs_train, recs_train, rmses = load_experiment_results(f_env, label, Ts, N_runs, D_y)
+        results[label] = (
+            agents = agents,
+            recs_train = recs_train,
+            envs_train = envs_train,
+            rmses_mean = mean(rmses, dims=1),
+        )
+    end
+
+    rmses_all = [(label, results[label].rmses_mean) for label in methods]
+    return results, rmses_all
 end
 
 end # module
