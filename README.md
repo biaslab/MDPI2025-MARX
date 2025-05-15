@@ -1,4 +1,4 @@
-# MDPI Entropy Hierarchical Multivariate ARX-EFE
+# MDPI Entropy Multivariate Autoregressive model with Exogeneous Inputs
 
 This is the companion repository to a paper submitted to the MDPI Entropy journal entitled:
 
