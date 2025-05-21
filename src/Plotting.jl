@@ -29,7 +29,6 @@ export plot_error
 export plot_system, animate_system, plot_predictions, plot_monte_carlo_results, plot_agent_performance, plot_agent_params, plot_params
 export plot_param_M_timeseries, plot_param_M_compare_timeseries
 export plot_param_M, plot_param_M_combos, plot_update_M
-export plot_param_A_norm_old
 export plot_param_A_norm, plot_param_W_norm, plot_param_AW_norm
 export violinplot_param_A_norm, violinplot_param_W_norm, violinplot_param_AW_norm
 export plot_pdf_params
@@ -669,7 +668,7 @@ function plot_param_M_timeseries(
             label_appendix = "$(subscripts_digit[i]),$(subscripts_digit[j])"
             label_text = "ã$label_appendix"
             plot!(rec.Ms[i, j, :], ribbon=std_A[i, j, :], label=label_text, fillalpha=DEFAULTS.fillalpha, color=color, lw=DEFAULTS.linewidth)
-            plot!(rec.As[i, j, :], label=nothing, color=color, lw=DEFAULTS.linewidth, ls=DEFAULTS.linestyle)
+            if !isnothing(sys) plot!(rec.As[i, j, :], label=nothing, color=color, lw=DEFAULTS.linewidth, ls=DEFAULTS.linestyle) end
             cidx += 1
         end
     else
@@ -678,7 +677,7 @@ function plot_param_M_timeseries(
             label_appendix = "$i,$j"
             label_text = "ã$label_appendix"
             plot!(rec.Ms[i, j, :], ribbon=std_A[i, j, :], label=label_text, fillalpha=DEFAULTS.fillalpha, color=color, lw=DEFAULTS.linewidth)
-            plot!(rec.As[i, j, :], label=nothing, color=color, lw=DEFAULTS.linewidth, ls=DEFAULTS.linestyle)
+            if !isnothing(sys) plot!(rec.As[i, j, :], label=nothing, color=color, lw=DEFAULTS.linewidth, ls=DEFAULTS.linestyle) end
             cidx += 1
         end
     end
@@ -702,67 +701,6 @@ function plot_param_M_timeseries(
         savefig(f_name)
     end
 
-    return p
-end
-
-
-function plot_param_M_timeseries_old(rec::Recorder; sys::Union{Nothing, System}=nothing, f_name::Union{Nothing, String}=nothing, psize::Union{Nothing, Tuple}=nothing, y_range::Union{Nothing, UnitRange{Int64}}=nothing, x_range::Union{Nothing, UnitRange{Int64}}=nothing, indices::Union{Nothing, Vector{Tuple{Int64, Int64}}}=nothing, ylim::Union{Nothing, Tuple{Float64, Float64}}=nothing)
-    label = latexstring("\\log p(\\tilde{A} \\mid \\mathcal{D}_k)")
-    subscripts_digit = ["₁", "₂", "₃", "₄", "₅", "₆", "₇", "₈", "₉"]
-    (D_y, D_x, N) = size(rec.Ms)
-    Σs = zeros(D_y*D_x, D_y*D_x, N)
-    std_A = zeros(D_y, D_x, N)
-    # same way to calculate it for (i,j): inv(get_estimate_W(agent))[i,i]*inv(agent.Λ)[j,j]
-    for t in 1:N
-        Σs[:,:,t] = kron(inv(rec.Λs[:,:,t]), inv(rec.Ws[:,:,t]))
-        std_A[:,:,t] = reshape(sqrt.(diag(Σs[:,:,t])), (D_y, D_x))
-    end
-    palette = theme_palette(:auto)
-    y_range = isnothing(y_range) ? collect(1:D_y) : y_range
-    x_range = isnothing(x_range) ? collect(1:D_x) : x_range
-    p = plot(xlabel="time [s]", ylabel=label)
-    cidx = 1
-    if !isnothing(indices)
-        for (i, j) in indices
-            color = palette[cidx % length(palette) + 1]
-            label_appendix = "$(subscripts_digit[i]),$(subscripts_digit[j])"
-            #label_appendix = "$i $j"
-            label = nothing
-            label = "ã$label_appendix"
-            label = "a$label_appendix"
-            plot!(rec.Ms[i, j, :], ribbon=std_A[i, j, :], label=label, fillalpha=DEFAULTS.fillalpha, color=color, lw=DEFAULTS.linewidth)
-            plot!(rec.As[i, j, :], label=nothing, color=color, lw=DEFAULTS.linewidth, ls=DEFAULTS.linestyle)
-            cidx += 1
-        end
-    else
-        for i in y_range #D_y
-            for j in x_range # D_x
-                color = palette[cidx % length(palette) + 1]
-                #label_appendix = "$(subscripts_digit[i]),$(subscripts_digit[j])"
-                label_appendix = "$i $j"
-                label = nothing
-                plot!(rec.Ms[i, j, :], ribbon=std_A[i, j, :], fillalpha=DEFAULTS.fillalpha, color=color)
-                plot!(rec.As[i, j, :], label=label, color=color, lw=DEFAULTS.linewidth, ls=DEFAULTS.linestyle)
-                cidx += 1
-            end
-        end
-    end
-    #y_limits = (-1.0, 1.0)
-    if !isnothing(ylim)
-        y_limits = ylim
-    else
-        y_limits = (minimum(rec.Ms[y_range,x_range,:]), maximum(rec.Ms[y_range,x_range,:]))
-        min_y = minimum(rec.Ms)
-        if !isnothing(sys) min_y = minimum([min_y, minimum(sys.A)]) end
-        max_y = maximum(rec.Ms)
-        if !isnothing(sys) max_y = maximum([max_y, maximum(sys.A)]) end
-        y_limits = (min_y - 0.1, max_y + 0.1)
-    end
-    if !isnothing(y_limits) ylims!(y_limits) end
-    plot!(size = isnothing(psize) ? (DEFAULTS.width_in*DEFAULTS.dpi,DEFAULTS.height_in*DEFAULTS.dpi) : psize)
-    plot!(tickfontsize = DEFAULTS.tickfontsize, guidefontsize = DEFAULTS.guidefontsize, legendfontsize = DEFAULTS.legendfontsize, titlefontsize = DEFAULTS.titlefontsize)
-    plot!(bottom_margin=8Plots.mm, left_margin=8Plots.mm)
-    if !isnothing(f_name) savefig(f_name) end
     return p
 end
 
@@ -833,29 +771,6 @@ function plot_param_A_norm(recs::Matrix{Recorder}, syss::Matrix{MARXSystem}, T::
     return p
 end
 
-function plot_param_A_norm_old(data::Vector{Tuple{String, Vector{Recorder}, Vector{MARXSystem}}}; f_name::Union{Nothing, String}=nothing, psize::Union{Nothing, Tuple}=nothing, logscale::Bool=false)
-    label_prefix = latexstring(logscale ? "\\log(||\\tilde{A} - A||_F)" : "||\\tilde{A} - A||_F")
-    p = plot(xlabel="time [s]", ylabel=label_prefix)
-    for (data_label, vrecs, vsys) in data
-        N_runs = size(vrecs)[1]
-        (D_y, D_x, N) = size(vrecs[1].Ms)
-        norms = zeros(N_runs, N)
-        for i in 1:N_runs
-            rec = vrecs[i]
-            sys = vsys[i]
-            A_diff = sys.A .- rec.Ms
-            norms[i,:] = [ norm(A_diff[:,:,t],2) for t in 1:N ]
-            if logscale norms[i,:] = log.(norms[i,:]) end
-        end
-        plot!(mean(norms, dims=1)', ribbon=std(norms, dims=1), lw=DEFAULTS.linewidth, label=data_label)
-    end
-    plot!(size = isnothing(psize) ? (DEFAULTS.width_in*DEFAULTS.dpi,DEFAULTS.height_in*DEFAULTS.dpi) : psize)
-    plot!(tickfontsize = DEFAULTS.tickfontsize, titlefontsize = DEFAULTS.titlefontsize, legendfontsize = DEFAULTS.legendfontsize, guidefontsize = DEFAULTS.guidefontsize)
-    plot!(bottom_margin=8Plots.mm, left_margin=12Plots.mm)
-    if !isnothing(f_name) savefig(f_name) end
-    return p
-end
-
 function compute_A_norms(vrecs::Vector{Recorder}, vsys::Vector{MARXSystem}; logscale::Bool=false)
     N_runs = length(vrecs)
     (D_y, D_x, N) = size(vrecs[1].Ms)
@@ -867,7 +782,7 @@ function compute_A_norms(vrecs::Vector{Recorder}, vsys::Vector{MARXSystem}; logs
     return logscale ? log.(norms) : norms
 end
 
-function compute_W_norms(vrecs::Vector{Recorder}, vsys::Vector{MARXSystem}; logscale::Bool=false)
+function compute_W_norms(vrecs::Vector{Recorder}, vsys::Vector{S}; logscale::Bool=false) where {S<:System}
     N_runs = length(vrecs)
     (D_y, D_x, N) = size(vrecs[1].Ws)
     norms = zeros(N_runs, N)
@@ -1120,7 +1035,7 @@ function plot_param_A_norm(data::Vector{Tuple{String, Vector{Recorder}, Vector{M
     return p
 end
 
-function plot_param_W_norm(data::Vector{Tuple{String, Vector{Recorder}, Vector{MARXSystem}}}; f_name::Union{Nothing, String}=nothing, psize::Union{Nothing, Tuple}=nothing, logscale::Bool=false)
+function plot_param_W_norm(data::Vector{Tuple{String, Vector{Recorder}, Vector{S}}}; f_name::Union{Nothing, String}=nothing, psize::Union{Nothing, Tuple}=nothing, logscale::Bool=false) where {S <: System}
     label_prefix = latexstring(logscale ? "\\log(||\\tilde{W} - W||_F)" : "||\\tilde{W} - W||_F")
     p = plot(xlabel="time [s]", ylabel=label_prefix)
 
@@ -1369,29 +1284,6 @@ function plot_param_W_norm(rec::Recorder; sys::Union{Nothing, System}=nothing, f
     p = plot([ norm(rec.Ws[:,:,t], 2) for t in 1:N ], label=latexstring("||W||_F"), color=color, linewidth=DEFAULTS.linewidth, xlabel="time [s]")
     if !isnothing(sys)
         hline!([norm(sys.W, 2)], lw=DEFAULTS.linewidth, ls=DEFAULTS.linestyle, label=latexstring("||\\tilde{W}||_F"), color=color)
-    end
-    plot!(size = isnothing(psize) ? (DEFAULTS.width_in*DEFAULTS.dpi,DEFAULTS.height_in*DEFAULTS.dpi) : psize)
-    plot!(tickfontsize = DEFAULTS.tickfontsize, titlefontsize = DEFAULTS.titlefontsize, legendfontsize = DEFAULTS.legendfontsize, guidefontsize = DEFAULTS.guidefontsize)
-    plot!(bottom_margin=8Plots.mm, left_margin=12Plots.mm)
-    if !isnothing(f_name) savefig(f_name) end
-    return p
-end
-
-function plot_param_W_norm_old(data::Vector{Tuple{String, Vector{Recorder}, Vector{MARXSystem}}}; f_name::Union{Nothing, String}=nothing, psize::Union{Nothing, Tuple}=nothing, logscale::Bool=false)
-    label_prefix = latexstring(logscale ? "\\log(||\\tilde{W} - W||_F)" : "||\\tilde{W} - W||_F")
-    p = plot(xlabel="time [s]", ylabel=label_prefix)
-    for (data_label, vrecs, vsys) in data
-        N_runs = size(vrecs)[1]
-        (D_y, D_x, N) = size(vrecs[1].Ms)
-        norms = zeros(N_runs, N)
-        for i in 1:N_runs
-            rec = vrecs[i]
-            sys = vsys[i]
-            W_diff = sys.W .- rec.Ws
-            norms[i,:] = [ norm(W_diff[:,:,t],2) for t in 1:N ]
-            if logscale norms[i,:] = log.(norms[i,:]) end
-        end
-        plot!(mean(norms, dims=1)', ribbon=std(norms, dims=1), lw=DEFAULTS.linewidth, label=data_label)
     end
     plot!(size = isnothing(psize) ? (DEFAULTS.width_in*DEFAULTS.dpi,DEFAULTS.height_in*DEFAULTS.dpi) : psize)
     plot!(tickfontsize = DEFAULTS.tickfontsize, titlefontsize = DEFAULTS.titlefontsize, legendfontsize = DEFAULTS.legendfontsize, guidefontsize = DEFAULTS.guidefontsize)
@@ -1892,7 +1784,7 @@ function plot_pdf_params(data::Vector{Tuple{String, Vector{Recorder}, Vector{Dou
     return p
 end
 
-function plot_pdf_predictive(data::Vector{Tuple{String, Vector{Recorder}, Vector{MARXSystem}}}; f_name::Union{Nothing, String}=nothing, psize::Union{Nothing, Tuple}=nothing, xlabel::String="Training size T")
+function plot_pdf_predictive(data::Vector{Tuple{String, Vector{Recorder}, Vector{S}}}; f_name::Union{Nothing, String}=nothing, psize::Union{Nothing, Tuple}=nothing, xlabel::String="Training size T") where {S<:System}
     #p = plot(xlabel="time [s]", ylabel="-log p(ŷ | Dₜ)")
     p = plot(xlabel="time [s]", ylabel=label_surprisals) #latexstring("-\\log p(\\tilde{y} \\mid \\mathcal{D}_k)"))
     for (data_label, vrecs, vsys) in data

@@ -25,5 +25,5 @@ NUM_THREADS=$(detect_cores)
 echo "Detected $NUM_THREADS logical CPU cores. Will run max($NUM_THREADS - 1, 1)."
 NUM_THREADS=$(( NUM_THREADS > 1 ? NUM_THREADS - 1 : 1 ))
 #JULIA_NUM_THREADS=$NUM_THREADS julia --project=. experiments-MARX.jl
-JULIA_NUM_THREADS=$NUM_THREADS julia --project=. experiments-dmsds.jl
-#julia --project=. experiments-dmsds.jl
+#JULIA_NUM_THREADS=$NUM_THREADS julia --project=. experiments-dmsds.jl
+JULIA_NUM_THREADS=$NUM_THREADS julia --project=. experiments-dpend.jl

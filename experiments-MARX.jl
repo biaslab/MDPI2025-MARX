@@ -1,7 +1,7 @@
 using MARX
 
 f_env = MARXSystem
-label_env = "MARXSystem"
+label_env = string(nameof(f_env))
 Δt, N_y, N_u, νadd, ulims = 1.0, 2, 3, 2, (-500.0, 500.0)
 cΩ_weak, cΛ_weak, cΩ_uninformative, cΛ_uninformative = 1e-2, 1e-1, 1e-5, 1e-4
 Ts = collect(2:2:64)

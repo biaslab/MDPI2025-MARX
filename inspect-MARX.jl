@@ -164,9 +164,9 @@ plot_es_posterior(results["MARX-UI"].recs_train[hyperparams_run_UI.run,hyperpara
 # ╟─94836524-fdf7-4bcf-a65a-3343f724a196
 # ╟─7b412a6c-a8a5-4c93-8083-11acbd1e5567
 # ╟─e98d41f6-0d08-4677-b283-d589b7b9c2a5
-# ╠═9c9729a3-226b-493f-9ee8-4104ff6ff8c5
+# ╟─9c9729a3-226b-493f-9ee8-4104ff6ff8c5
 # ╟─2792d246-0377-40f7-adf5-ef99d023aa9f
-# ╟─87614be1-7870-444d-b985-8dda3844aa2f
+# ╠═87614be1-7870-444d-b985-8dda3844aa2f
 # ╟─408cb4a4-3e56-45e9-9b08-cf43116ceb18
 # ╟─124996b5-8df5-4207-9950-ca700c8a0ade
 # ╟─d88f5e6b-3afd-456f-a796-2b316cbe7cc3

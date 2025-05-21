@@ -5,7 +5,7 @@ using Markdown
 
 using ..Utils
 using ..DynamicSystemBase
-import ..DynamicSystemBase: get_eom_md, ddzdt, inv_inertia_matrix
+import ..DynamicSystemBase: get_eom_md, ddzdt, inv_inertia_matrix, update_params
 import ..SystemBase: state_transition!, measure, get_eom_md, get_state_dim, get_observation_dim, get_action_dim, get_control_dim
 
 export DPendulum
@@ -14,14 +14,15 @@ abstract type Pendulum <: DynamicSystem end
 
 const DEFAULTS_SYS = (
     DPendulum = (
-        D_z = 2::Int,
+        D_z = 4::Int,
         D_y = 2::Int,
         D_a = 2::Int,
         D_u = 2::Int,
         Δt = 0.01::Float64, # time step duration in s
         N = 500::Int, # number of episode steps
         z = zeros(4)::Vector{Float64}, # initial (hidden) state
-        mnoise_S = 1e-3*diagm(ones(2))::Matrix{Float64}, # measurement noise std matrix
+        #mnoise_S = 1e-3*diagm(ones(2))::Matrix{Float64}, # measurement noise std matrix
+        W = 1e4*[0.2 0.1; 0.1 0.2]::Matrix{Float64}, # precision matrix
         mass = [1.0, 1.0]::Vector{Float64}, # mass of each link
         length = [1.0, 1.0]::Vector{Float64}, # length of each link
         damping = 0.0::Float64, # damping value
@@ -36,7 +37,7 @@ mutable struct DPendulum <: Pendulum
     N           ::Integer
     # state + observation
     z           ::Vector{Float64}
-    mnoise_S    ::Matrix{Float64}
+    W           ::Matrix{Float64}
     # parameters
     mass        ::Vector{Float64}
     length      ::Vector{Float64}
@@ -46,12 +47,12 @@ mutable struct DPendulum <: Pendulum
         Δt::Float64=DEFAULTS_SYS.DPendulum.Δt,
         N::Int=DEFAULTS_SYS.DPendulum.N,
         z::Vector{Float64}=DEFAULTS_SYS.DPendulum.z,
-        mnoise_S::Matrix{Float64}=DEFAULTS_SYS.DPendulum.mnoise_S,
+        W::Matrix{Float64}=DEFAULTS_SYS.DPendulum.W,
         mass::Vector{Float64}=DEFAULTS_SYS.DPendulum.mass,
         length::Vector{Float64}=DEFAULTS_SYS.DPendulum.length,
         damping::Float64=DEFAULTS_SYS.DPendulum.damping
     )
-        return new(1, Δt, N, z, mnoise_S, mass, length, damping)
+        return new(1, Δt, N, z, W, mass, length, damping)
     end
 end
 
@@ -117,7 +118,10 @@ function inv_inertia_matrix(sys::DPendulum)
     return invM
 end
 
-function ddzdt(sys::DPendulum, z1::Float64, z2::Float64, dz1::Float64, dz2::Float64, u::Vector{Float64})
+#ddzdt(sys::DynamicSystem, z::Vector{Float64}, dz::Vector{Float64}, u::Vector{Float64}) = not_implemented_error(typeof(sys))
+function ddzdt(sys::DPendulum, z::Vector{Float64}, dz::Vector{Float64}, u::Vector{Float64})
+    z1, z2 = z
+    dz1, dz2 = dz
     m1, m2 = sys.mass
     l1, l2 = sys.length
     c1, c2 = sys.damping, sys.damping
@@ -137,10 +141,17 @@ function ddzdt(sys::DPendulum, z1::Float64, z2::Float64, dz1::Float64, dz2::Floa
     sinz1mz2 = sin(z1mz2)
     sinz2mz1 = sin(z2mz1)
 
-    ddz1 = -Jx * sinz1mz2 * dz2^2 - μ1 * sin(z1) + κ1 * sinz2mz1 - c1 * dz1 / l1 #+ u[1]
-    ddz2 =  Jx * sinz1mz2 * dz1^2 - μ2 * sin(z2) + κ2 * sinz2mz1 - c2 * dz2 / l2 #+ u[2]
+    ddz1 = -Jx * sinz1mz2 * dz2^2 - μ1 * sin(z1) + κ1 * sinz2mz1 - c1 * dz1 / l1 + u[1]
+    ddz2 =  Jx * sinz1mz2 * dz1^2 - μ2 * sin(z2) + κ2 * sinz2mz1 - c2 * dz2 / l2 + u[2]
 
-    return ddz1, ddz2
+
+    Mi = inv_inertia_matrix(sys)
+    return Mi*[ddz1, ddz2]
+    #return ddz1, ddz2
+end
+
+function update_params(sys::DPendulum)
+    return # do nothing
 end
 
 end
