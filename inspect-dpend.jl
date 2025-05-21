@@ -41,7 +41,7 @@ html"""
 begin
 	dir_figures = "figures/"
 	mkpath(dir_figures)
-	f_env = DoubleMassSpringDamperSystem
+	f_env = DPendulum
 	label_env = string(nameof(f_env))
 	D_y = get_observation_dim(f_env)
 	Ts = collect(2:2:64)
