@@ -42,31 +42,31 @@ function react_and_record!(rec::Recorder, agent::Agent, y::Vector{Float64}, pred
     # TODO: update before or after control decision?? should be before but in the example notebook its after?
     #println("measured: $y $(agent.does_dream)")
     observe!(agent, agent.does_dream ? pred_y : y)
-    record_xs!(rec, memory(agent), t)
+    #record_xs!(rec, memory(agent), t)
     pred_y = predict_and_record!(rec, agent, t, 1)
-    if agent isa AbstractMARXAgent
-        record_surprisals!(rec, surprisal(agent), t)
-        record_vfes!(rec, variational_free_energy(agent), t)
-        record_ces_posterior_prior!(rec, ce_posterior_prior(agent), t)
-        record_ces_posterior_likelihood!(rec, ce_posterior_likelihood(agent), t)
-        record_es_posterior!(rec, e_posterior(agent), t)
-        record_kls_posterior_prior!(rec, kl_posterior_prior(agent), t)
-        record_kls_posterior_likelihood!(rec, kl_posterior_likelihood(agent), t)
-    end
+    #if agent isa AbstractMARXAgent
+    #    record_surprisals!(rec, surprisal(agent), t)
+    #    record_vfes!(rec, variational_free_energy(agent), t)
+    #    record_ces_posterior_prior!(rec, ce_posterior_prior(agent), t)
+    #    record_ces_posterior_likelihood!(rec, ce_posterior_likelihood(agent), t)
+    #    record_es_posterior!(rec, e_posterior(agent), t)
+    #    record_kls_posterior_prior!(rec, kl_posterior_prior(agent), t)
+    #    record_kls_posterior_likelihood!(rec, kl_posterior_likelihood(agent), t)
+    #end
     agent.does_learn && update!(agent)
 
     if agent isa AbstractMARXAgent
         ν, Λ, Ω, M = AgentBase.params(agent)
-        record_νs!(rec, ν, t)
-        record_Λs!(rec, Λ, t)
-        record_Ωs!(rec, Ω, t)
-        record_Ws!(rec, get_estimate_W(agent), t)
+        #record_νs!(rec, ν, t)
+        #record_Λs!(rec, Λ, t)
+        #record_Ωs!(rec, Ω, t)
+        #record_Ws!(rec, get_estimate_W(agent), t)
     elseif typeof(agent) == OnlineLeastSquaresAgent
         M, P, λ, δ = AgentBase.params(agent)
     else
         M = AgentBase.params(agent)
     end
-    record_Ms!(rec, M, t)
+    #record_Ms!(rec, M, t)
     a = decide!(agent)
     record_as!(rec, a, t+1)
     return a, pred_y
@@ -96,11 +96,11 @@ function interact(env::System, agent::Agent, ulims::Tuple{Float64, Float64}, N_f
     a = decide!(agent) # a_{t-1} from agent's decision-making process
     record_as!(rec, a, 1)
     u = convert_action(a, ulims)
-    record_us!(rec, u, 1)
+    #record_us!(rec, u, 1)
     #println(typeof(rec.As))
     #println(size(rec.As))
     #println(size(get_state_transition_matrix(env)))
-    env isa AbstractMARXSystem && record_As!(rec, get_state_transition_matrix(env), 1)
+    #env isa AbstractMARXSystem && record_As!(rec, get_state_transition_matrix(env), 1)
     step!(env, u, ulims) # z_t = f(z_{t-1}, u_{t-1})
     pred_y = zeros(D_y)
     for t = 1:N-1
@@ -110,24 +110,24 @@ function interact(env::System, agent::Agent, ulims::Tuple{Float64, Float64}, N_f
         record_ys!(rec, y, t)
         a, pred_y = react_and_record!(rec, agent, y, pred_y, t) # u_t = clip(a_t) from agents decision-making process
         u = convert_action(a, ulims)
-        record_us!(rec, u, t+1)
-        env isa AbstractMARXSystem && record_As!(rec, get_state_transition_matrix(env), t+1)
+        #record_us!(rec, u, t+1)
+        #env isa AbstractMARXSystem && record_As!(rec, get_state_transition_matrix(env), t+1)
         step!(env, u, ulims) # z_t = f(z_{t-1}, u_{t-1})
     end
     record_zs!(rec, get_state(env), N)
     y = measure(env)
     record_ys!(rec, y, N)
-    if agent isa AbstractMARXAgent
-        record_surprisals!(rec, surprisal(agent), N)
-        record_vfes!(rec, variational_free_energy(agent), N)
-        record_ces_posterior_prior!(rec, ce_posterior_prior(agent), N)
-        record_ces_posterior_likelihood!(rec, ce_posterior_likelihood(agent), N)
-        record_es_posterior!(rec, e_posterior(agent), N)
-        record_kls_posterior_prior!(rec, kl_posterior_prior(agent), N)
-        record_kls_posterior_likelihood!(rec, kl_posterior_likelihood(agent), N)
-    end
+    #if agent isa AbstractMARXAgent
+    #    record_surprisals!(rec, surprisal(agent), N)
+    #    record_vfes!(rec, variational_free_energy(agent), N)
+    #    record_ces_posterior_prior!(rec, ce_posterior_prior(agent), N)
+    #    record_ces_posterior_likelihood!(rec, ce_posterior_likelihood(agent), N)
+    #    record_es_posterior!(rec, e_posterior(agent), N)
+    #    record_kls_posterior_prior!(rec, kl_posterior_prior(agent), N)
+    #    record_kls_posterior_likelihood!(rec, kl_posterior_likelihood(agent), N)
+    #end
     observe!(agent, agent.does_dream ? pred_y : y)
-    record_xs!(rec, memory(agent), N)
+    #record_xs!(rec, memory(agent), N)
     agent.does_learn && update!(agent)
     k = 1
     # TODO: END react code
@@ -137,23 +137,25 @@ function interact(env::System, agent::Agent, ulims::Tuple{Float64, Float64}, N_f
     elseif agent isa OnlineProbabilisticAgent
         # Call predict for a probabilistic agent (expect mean and covariance)
         pred_y, pred_Σ = predict(agent)
-        record_prediction_covariance!(rec, pred_Σ, N, k)
+        #record_prediction_covariance!(rec, pred_Σ, N, k)
     else
         error("Unknown agent type")
     end
-    record_prediction_mean!(rec, pred_y, N, k)
+    #record_prediction_mean!(rec, pred_y, N, k)
     if agent isa AbstractMARXAgent
         ν, Λ, Ω, M = AgentBase.params(agent)
-        record_νs!(rec, ν, N)
-        record_Λs!(rec, Λ, N)
-        record_Ωs!(rec, Ω, N)
-        record_Ws!(rec, get_estimate_W(agent), N)
+        #record_νs!(rec, ν, N)
+        #record_Λs!(rec, Λ, N)
+        #record_Ωs!(rec, Ω, N)
+        #record_Ws!(rec, get_estimate_W(agent), N)
     elseif typeof(agent) == OnlineLeastSquaresAgent
         M, P, λ, δ = AgentBase.params(agent)
     else
         M = AgentBase.params(agent)
     end
-    record_Ms!(rec, M, N)
+    # clear up controls again
+    agent.us_matlab = nothing
+    #record_Ms!(rec, M, N)
     #a = react_and_record!(rec, agent, y, N)
     return env, rec
 end
@@ -194,19 +196,19 @@ function monte_carlo_experiment(N_runs::Int, f_env::DataType, f_agent::DataType,
     agents = Vector{Agent}(undef, N_runs)
     envs_train, envs_test = Vector{f_env}(undef, N_runs), Vector{f_env}(undef, N_runs)
     recs_train, recs_test = Vector{Recorder}(undef, N_runs), Vector{Recorder}(undef, N_runs)
-    abs_errors = zeros(D_y, T_test, N_runs)
-    rmses = zeros(D_y, N_runs)
+    #abs_errors = zeros(D_y, T_test, N_runs)
+    #rmses = zeros(D_y, N_runs)
     for i in 1:N_runs
         us_train_offset_train = (i-1)*T
         us_train_offset_test = (i-1)*T_test
         us_t_beg_train, us_t_end_train = 1 + us_train_offset_train, D_y*T + us_train_offset_train
         us_t_beg_test, us_t_end_test = us_t_total - D_y*T_test+1 - D_y*T_test*N_runs + us_train_offset_test, us_t_total - D_y*T_test*N_runs + us_train_offset_test
         agents[i], envs_train[i], recs_train[i], envs_test[i], recs_test[i] = train_test_run(f_env, f_agent, N, P, N_test, P_test, Δt, ulims, N_y, N_u, νadd, us_t_beg_train, us_t_end_train, us_t_beg_test, us_t_end_test, i, cΩ, cΛ)
-        rec_test = recs_test[i]
-        abs_errors[:,:,i] = rec_test.ys .- rec_test.pred_ys[:,:,1]
-        rmses[:, i] = [ sqrt(mean(abs_errors[dim,:,i].^2)) for dim in 1:D_y ]
+        #rec_test = recs_test[i]
+        #abs_errors[:,:,i] = rec_test.ys .- rec_test.pred_ys[:,:,1]
+        #rmses[:, i] = [ sqrt(mean(abs_errors[dim,:,i].^2)) for dim in 1:D_y ]
     end
-    return agents, envs_train, envs_test, recs_train, recs_test, rmses
+    return agents, envs_train, envs_test, recs_train, recs_test#, rmses
 end
 
 function monte_carlo_experiment_T(label_env::String, label_agent::String, Ts::Vector{Int}, N_runs::Int, f_env::DataType, f_agent::DataType, Δt::Float64, ulims::Tuple{Float64, Float64}, N_y::Int, N_u::Int, νadd::Int, cΩ::Float64, cΛ::Float64)
@@ -217,9 +219,9 @@ function monte_carlo_experiment_T(label_env::String, label_agent::String, Ts::Ve
         println("$label_env $label_agent $T")
         P = 2
         N = Int(T/P)
-        agent, env_train, env_test, rec_train, rec_test, rmse = monte_carlo_experiment(N_runs, f_env, f_agent, N, P, Δt, ulims, N_y, N_u, νadd, cΩ, cΛ)
+        agent, env_train, env_test, rec_train, rec_test = monte_carlo_experiment(N_runs, f_env, f_agent, N, P, Δt, ulims, N_y, N_u, νadd, cΩ, cΛ)
         f_name = "$(dir_results)/$(label_agent)_monte_carlo_T$(T).jld2"
-        @save f_name agent=agent env_train=env_train env_test=env_test rec_train=rec_train rec_test=rec_test rmse=rmse
+        @save f_name agent=agent env_train=env_train env_test=env_test rec_train=rec_train rec_test=rec_test
     end
 end
 
@@ -234,9 +236,9 @@ function monte_carlo_experiment_T_parallel(label_env::String, label_agent::Strin
         println("Thread $(threadid()): $label_env $label_agent $T")
         P = 2
         N = Int(T / P)
-        agent, env_train, env_test, rec_train, rec_test, rmse = monte_carlo_experiment(N_runs, f_env, f_agent, N, P, Δt, ulims, N_y, N_u, νadd, cΩ, cΛ)
+        agent, env_train, env_test, rec_train, rec_test = monte_carlo_experiment(N_runs, f_env, f_agent, N, P, Δt, ulims, N_y, N_u, νadd, cΩ, cΛ)
         f_name = "$(dir_results)/$(label_agent)_monte_carlo_T$(T).jld2"
-        @save f_name agent=agent env_train=env_train env_test=env_test rec_train=rec_train rec_test=rec_test rmse=rmse
+        @save f_name agent=agent env_train=env_train env_test=env_test rec_train=rec_train rec_test=rec_test
     end
 end
 
@@ -281,9 +283,9 @@ function monte_carlo_experiment_T_parallel_live(label_env::String, label_agent::
         T = Ts[i]
         P = 2
         N = Int(T / P)
-        agent, env_train, env_test, rec_train, rec_test, rmse = monte_carlo_experiment(N_runs, f_env, f_agent, N, P, Δt, ulims, N_y, N_u, νadd, cΩ, cΛ)
+        agent, env_train, env_test, rec_train, rec_test = monte_carlo_experiment(N_runs, f_env, f_agent, N, P, Δt, ulims, N_y, N_u, νadd, cΩ, cΛ)
         f_name = "$(dir_results)/$(label_agent)_monte_carlo_T$(T).jld2"
-        @save f_name agent=agent env_train=env_train env_test=env_test rec_train=rec_train rec_test=rec_test rmse=rmse
+        @save f_name agent=agent env_train=env_train env_test=env_test rec_train=rec_train rec_test=rec_test
         lock(lck) do
             statuses[i] = :done
         end
@@ -299,33 +301,34 @@ function load_experiment_results(f_env::DataType, label_agent::String, Ts::Vecto
     agents = Matrix{Agent}(undef, N_runs, n_Ts)
     envs_train = Matrix{f_env}(undef, N_runs, n_Ts)
     recs_train = Matrix{Recorder}(undef, N_runs, n_Ts)
-    rmses = zeros(D_y, N_runs, n_Ts)
+    envs_test = Matrix{f_env}(undef, N_runs, n_Ts)
+    recs_test = Matrix{Recorder}(undef, N_runs, n_Ts)
     for (i, T) in enumerate(Ts)
         f_name = "results/$(label_env)/$(label_agent)_monte_carlo_T$(T).jld2"
         data = load(f_name)
         agents[:,i] = data["agent"]
         envs_train[:,i] = data["env_train"]
+        envs_test[:,i] = data["env_test"]
         recs_train[:,i] = data["rec_train"]
-        rmses[:,:,i] = data["rmse"]
+        recs_test[:,i] = data["rec_test"]
     end
-    return (agents, envs_train, recs_train, rmses)
+    return agents, envs_train, recs_train, envs_test, recs_test
 end
 
 function prepare_experiment_data(f_env::DataType, methods::Vector{String}, Ts::Vector{Int}, N_runs::Int, D_y::Int)
     results = Dict{String, NamedTuple}()
 
     for label in methods
-        agents, envs_train, recs_train, rmses = load_experiment_results(f_env, label, Ts, N_runs, D_y)
+        agents, envs_train, recs_train, envs_test, recs_test = load_experiment_results(f_env, label, Ts, N_runs, D_y)
         results[label] = (
             agents = agents,
             recs_train = recs_train,
             envs_train = envs_train,
-            rmses_mean = mean(rmses, dims=1),
+            recs_test = recs_test,
+            envs_test = envs_test
         )
     end
-
-    rmses_all = [(label, results[label].rmses_mean) for label in methods]
-    return results, rmses_all
+    return results
 end
 
 end # module

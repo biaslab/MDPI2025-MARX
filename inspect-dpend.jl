@@ -120,6 +120,12 @@ md"## DEBUGGING: Inspecting performance of MARX-UI of a single run for T=$(hyper
 	Dict(:type => :Slider, :label => "run", :range => 1:N_runs, :default => 1),
 ])
 
+# ╔═╡ e751343c-2013-4ece-91aa-154b03d877d9
+
+
+# ╔═╡ 003b5541-56d3-4c2c-b97e-3ddcbedc75d9
+plot(results["MARX-UI"].recs_train[hyperparams_run_UI.run,hyperparams_debug.T].ys)
+
 # ╔═╡ 1e78cacd-0b65-4f00-a35b-0247260895d3
 plot_param_W_timeseries(results["MARX-UI"].recs_train[hyperparams_run_UI.run,hyperparams_debug.T], sys=results["MARX-UI"].envs_train[hyperparams_run_UI.run,hyperparams_debug.T], psize=(5*dpi, 2*dpi))
 
@@ -155,6 +161,8 @@ plot_es_posterior(results["MARX-UI"].recs_train[hyperparams_run_UI.run,hyperpara
 # ╠═67af74c2-b8ae-4d0e-81a9-b835ab99cc0a
 # ╟─a3ef187b-6773-4ee6-a56b-044ca28fd95e
 # ╠═37178881-e714-4c64-bbd7-7d4b321a5405
+# ╠═e751343c-2013-4ece-91aa-154b03d877d9
+# ╠═003b5541-56d3-4c2c-b97e-3ddcbedc75d9
 # ╠═1e78cacd-0b65-4f00-a35b-0247260895d3
 # ╠═ce5fac9b-e242-45f4-8552-ffbb3f457716
 # ╠═6780990f-7775-4261-8b16-8eefb0b83294

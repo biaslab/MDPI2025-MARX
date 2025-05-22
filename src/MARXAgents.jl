@@ -47,6 +47,11 @@ mutable struct MARXAgent <: AbstractMARXAgent
     memory_type     ::String
     ybuffer         ::RingBuffer # memory, observations
     ubuffer         ::RingBuffer # memory, controls
+    # initial parameters - the agent's "DNA" (to derive their subsequent values and save memory space)
+    ν0               ::Int # degrees of freedom for Wishart
+    Ω0               ::Matrix{Float64} # scale matrix of Wishart (size: D_y × D_y)
+    Λ0               ::Matrix{Float64} # row matrix of MatrixNormal (size: D_x × D_x)
+    M0               ::Matrix{Float64} # mean of MatrixNormal (size: D_x × D_y)
     # parameters (MatrixNormal-Wishart likelihood) D_y: dimension of observation, D_x = N_y * D_y: dimension of state (result of M * memory_buffer)
     ν               ::Int # degrees of freedom for Wishart
     Ω               ::Matrix{Float64} # scale matrix of Wishart (size: D_y × D_y)
@@ -91,6 +96,7 @@ mutable struct MARXAgent <: AbstractMARXAgent
             ID, 1, T,
             D_y, D_u,
             D_x, N_y, N_u, memory_type, ybuffer, ubuffer,
+            ν, Ω, Λ, M,
             ν, Ω, Λ, M,
             control_lims, does_learn, does_dream, nothing
         )

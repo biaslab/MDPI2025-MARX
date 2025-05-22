@@ -92,7 +92,6 @@ mutable struct OnlineLeastSquaresAgent <: OnlineDeterministicAgent
     ubuffer         ::RingBuffer # memory, controls
     # parameters (MatrixNormal-Wishart likelihood) D_y: dimension of observation, D_x = N_y * D_y: dimension of state (result of M * memory_buffer)
     M               ::Matrix{Float64} # mean of MatrixNormal (size: D_x × D_y)
-    #P               ::Matrix{Float64} # covariance matrix representing confidence in the current estimate of M
     P               ::Vector{Matrix{Float64}} # covariance matrix representing confidence in the current estimate of M
     λ               ::Float64 # forgetting factor / regularization term: control how much weight is given to new data vs past data. slighlty below 1: gradual adapation to changing conditions
     δ               ::Float64 # initial covariance factor / initialization factor. high value = low confidence = better adaptation
