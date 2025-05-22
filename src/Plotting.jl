@@ -205,9 +205,8 @@ function plot_system(rec::Recorder, sys::DoubleMassSpringDamperSystem, t::Int64;
 end
 
 # Refactored plot_system for DPendulum
-function plot_system(rec::Recorder, sys::DPendulum, t::Int64; box_l::Float64=1.0, gs::Union{Vector{Distributions.Normal{Float64}}, Nothing}=nothing, pys::Union{Vector{Float64}, Nothing}=nothing, vys::Union{Vector{Float64}, Nothing}=nothing, n_std::Float64=1.0, colors::Vector{Symbol}=[:orange, :blue], prefix_title::String="")
-
-    θ1, θ2 = rec.ys[t+1]
+function plot_system(rec::Recorder, sys::DPendulum, t::Int64; box_l::Float64=1.0, gs::Union{Vector{Distributions.Normal{Float64}}, Nothing}=nothing, pys::Union{Vector{Float64}, Nothing}=nothing, vys::Union{Vector{Float64}, Nothing}=nothing, n_std::Float64=1.0, colors::Vector{Symbol}=[:orange, :blue], prefix_title::String="", f_name::Union{Nothing, String}=nothing)
+    θ1, θ2 = rec.ys[:,t]
     l1, l2 = sys.length
     lims = 1.1 * (l1 + l2)
 
@@ -215,6 +214,8 @@ function plot_system(rec::Recorder, sys::DPendulum, t::Int64; box_l::Float64=1.0
     plot_links!(sys, θ1, θ2, l1, l2, colors, gs, pys, vys, n_std)
     finalize_plot!((-lims, lims), (-lims, lims))
     plot!(size=(600,600)) # force size to be quadratic
+
+    if !isnothing(f_name) savefig(f_name) end
 
     return plt
 end
@@ -1928,14 +1929,14 @@ function plot_param_W_timeseries(rec::Recorder; sys::Union{Nothing, System}=noth
         iΩ = inv(rec.Ωs[:,:,t])
         Ws[:,:,t] = rec.νs[t] * iΩ
         for i in 1:D_y
-            for j in 1:D_y
+            for j in i:D_y
                 std_W[i,j,t] = sqrt(rec.νs[t]*(iΩ[i,j]^2 + iΩ[i,i]*iΩ[j,j]))
             end
         end
     end
     palette = theme_palette(:auto)
     for i in 1:D_y
-        for j in 1:D_y
+        for j in i:D_y
             color = palette[((i-1)*D_y + j - 1) % length(palette) + 1]
             label_appendix = "$(subscripts_digit[i]),$(subscripts_digit[j])"
             plot!(Ws[i, j, :], ribbon=std_W[i, j, :], label=nothing, fillalpha=DEFAULTS.fillalpha, color=color, lw=DEFAULTS.linewidth)
