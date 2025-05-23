@@ -1294,7 +1294,7 @@ function plot_param_W_norm(rec::Recorder; sys::Union{Nothing, System}=nothing, f
 end
 
 function plot_pdf_params(rec::Recorder, sys::System; f_name::Union{Nothing, String}=nothing, psize::Union{Nothing, Tuple}=nothing)
-    p = plot(xlabel="time [s]", ylabel=latexstring("\\log p(\\tilde{\\Theta} | \\mathcal{D}_k)"))
+    p = plot(xlabel="time [s]", ylabel=latexstring("\\log p(\\Theta = \\tilde{\\Theta} | \\mathcal{D}_k)"))
     (D_y, D_x, N) = size(rec.Ms)
     pdf_AW = [pdf_params(sys.A, sys.W, rec.Ms[:,:,t], rec.Λs[:,:,t], rec.Ωs[:,:,t], rec.νs[t]) for t in 1:N ]
     plot!(pdf_AW, lw=DEFAULTS.linewidth, label=nothing)

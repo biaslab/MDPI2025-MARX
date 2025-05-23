@@ -21,8 +21,10 @@ begin
 using Pkg
 Pkg.update()
 Pkg.add(url="https://github.com/biaslab/MDPI2025-MARX#main")
+Pkg.add("Plots")
 using MARX
 using JLD2
+using Plots
 end
 
 # ╔═╡ e389e050-65e2-11ef-3cae-03e1bfe027f0
