@@ -1792,7 +1792,7 @@ end
 
 function plot_pdf_predictive(data::Vector{Tuple{String, Vector{Recorder}, Vector{S}}}; f_name::Union{Nothing, String}=nothing, psize::Union{Nothing, Tuple}=nothing, xlabel::String="Training size T") where {S<:System}
     p = plot(xlabel="time [s]", ylabel=label_surprisals)
-    for (data_abel, vrecs, vsys) in data
+    for (data_label, vrecs, vsys) in data
         N_runs = size(vrecs)[1]
         (D_y, D_x, N) = size(vrecs[1].Ms)
         pdfs = zeros(N_runs, N)
