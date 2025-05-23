@@ -98,7 +98,7 @@ md"## DEBUGGING: Inspecting performance of MARX-WI of a single run for T=$(hyper
 ])
 
 # ╔═╡ ab00b2e0-b28a-4224-92d4-add711923ff1
-plot_param_W_timeseries(results["MARX-WI"].recs_train[hyperparams_run_WI.run,hyperparams_debug.T], sys=results["MARX-WI"].envs_train[hyperparams_run_WI.run,hyperparams_debug.T], psize=(5*dpi, 2*dpi), f_name="figures/$(label_env)-coeffs-W-timeseries")
+plot_param_W_timeseries(results["MARX-WI"].recs_train[hyperparams_run_WI.run,hyperparams_debug.T], sys=results["MARX-WI"].envs_train[hyperparams_run_WI.run,hyperparams_debug.T], f_name="figures/$(label_env)-coeffs-W-timeseries")
 
 # ╔═╡ 425cb22a-def8-4aa5-bb27-96b2ad0b9e09
 A_indices = [(1,1), (2,1), (1,6), (2,6)]
@@ -121,7 +121,7 @@ md"## DEBUGGING: Inspecting performance of MARX-UI of a single run for T=$(hyper
 ])
 
 # ╔═╡ 1e78cacd-0b65-4f00-a35b-0247260895d3
-plot_param_W_timeseries(results["MARX-UI"].recs_train[hyperparams_run_UI.run,hyperparams_debug.T], sys=results["MARX-UI"].envs_train[hyperparams_run_UI.run,hyperparams_debug.T], psize=(5*dpi, 2*dpi))
+plot_param_W_timeseries(results["MARX-UI"].recs_train[hyperparams_run_UI.run,hyperparams_debug.T], sys=results["MARX-UI"].envs_train[hyperparams_run_UI.run,hyperparams_debug.T])
 
 # ╔═╡ ce5fac9b-e242-45f4-8552-ffbb3f457716
 plot_param_M_timeseries(results["MARX-UI"].recs_train[hyperparams_run_UI.run,hyperparams_debug.T], indices=A_indices)

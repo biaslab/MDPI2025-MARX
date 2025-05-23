@@ -96,6 +96,13 @@ DEFAULTS = (
     linestyle=:dashdot
 )
 
+label_pdf_params_true = latexstring("\\log p(\\Theta = \\tilde{\\Theta} \\mid \\mathcal{D}_k)")
+label_norm_A = latexstring("||\\tilde{A} - A||_F")
+label_norm_A_log = latexstring("\\log(||\\tilde{A} - A||_F)")
+label_norm_W = latexstring("||\\tilde{W} - W||_F")
+label_norm_W_log = latexstring("\\log(||\\tilde{W} - W||_F)")
+label_pdf_param_A = latexstring("\\log p(\\tilde{A} \\mid \\tilde{W} \\mathcal{D}_k)")
+label_pdf_param_W = latexstring("\\log p(\\tilde{W} \\mid \\mathcal{D}_k)")
 label_surprisals = latexstring("-\\log p(\\tilde{y}_k \\mid \\mathcal{D}_k)")
 label_es_posterior = latexstring("H[q(\\Theta \\mid \\mathcal{D}_k)]")
 label_ces_posterior_prior = latexstring("H[q(\\Theta \\mid \\mathcal{D}_k), p(\\Theta \\mid \\mathcal{D}_{k-1})]")
@@ -628,7 +635,7 @@ function plot_param_M_timeseries(
     indices::Union{Nothing, Vector{Tuple{Int64, Int64}}}=nothing, 
     ylim::Union{Nothing, Tuple{Float64, Float64}}=nothing
 )
-    label = latexstring("\\log p(\\tilde{A} \\mid \\mathcal{D}_k)")
+    label = label_pdf_param_A
     (D_y, D_x, N) = size(rec.Ms)
 
     Σs = zeros(D_y*D_x, D_y*D_x, N)
@@ -1010,7 +1017,7 @@ function violinplot_param_W_norm(data::Vector{Tuple{String, Vector{Recorder}, Ve
 end
 
 function plot_param_A_norm(data::Vector{Tuple{String, Vector{Recorder}, Vector{MARXSystem}}}; f_name::Union{Nothing, String}=nothing, psize::Union{Nothing, Tuple}=nothing, logscale::Bool=false)
-    label_prefix = latexstring(logscale ? "\\log(||\\tilde{A} - A||_F)" : "||\\tilde{A} - A||_F")
+    label_prefix = logscale ? label_norm_A_log : label_norm_A
     p = plot(xlabel="time [s]", ylabel=label_prefix)
 
     for (label, vrecs, vsys) in data
@@ -1037,7 +1044,7 @@ function plot_param_A_norm(data::Vector{Tuple{String, Vector{Recorder}, Vector{M
 end
 
 function plot_param_W_norm(data::Vector{Tuple{String, Vector{Recorder}, Vector{S}}}; f_name::Union{Nothing, String}=nothing, psize::Union{Nothing, Tuple}=nothing, logscale::Bool=false) where {S <: System}
-    label_prefix = latexstring(logscale ? "\\log(||\\tilde{W} - W||_F)" : "||\\tilde{W} - W||_F")
+    label_prefix = logscale ? label_norm_W_log : label_norm_W
     p = plot(xlabel="time [s]", ylabel=label_prefix)
 
     for (label, vrecs, vsys) in data
@@ -1294,7 +1301,7 @@ function plot_param_W_norm(rec::Recorder; sys::Union{Nothing, System}=nothing, f
 end
 
 function plot_pdf_params(rec::Recorder, sys::System; f_name::Union{Nothing, String}=nothing, psize::Union{Nothing, Tuple}=nothing)
-    p = plot(xlabel="time [s]", ylabel=latexstring("\\log p(\\Theta = \\tilde{\\Theta} | \\mathcal{D}_k)"))
+    p = plot(xlabel="time [s]", ylabel=label_pdf_params_true)
     (D_y, D_x, N) = size(rec.Ms)
     pdf_AW = [pdf_params(sys.A, sys.W, rec.Ms[:,:,t], rec.Λs[:,:,t], rec.Ωs[:,:,t], rec.νs[t]) for t in 1:N ]
     plot!(pdf_AW, lw=DEFAULTS.linewidth, label=nothing)
@@ -1317,7 +1324,7 @@ function plot_pdf_params(recs::Matrix{Recorder}, syss::Matrix{MARXSystem}, T::In
         pdfs_AW[i,:] = [pdf_params(sys.A, sys.W, rec.Ms[:,:,t], rec.Λs[:,:,t], rec.Ωs[:,:,t], rec.νs[t]) for t in 1:N ]
     end
 
-    p = plot(xlabel="time [s]", ylabel=latexstring("\\log p(\\tilde{\\Theta} | \\mathcal{D}_k)"))
+    p = plot(xlabel="time [s]", ylabel=label_pdf_params_true)
     plot!(mean(pdfs_AW, dims=1)', ribbon=std(pdfs_AW, dims=1), lw=DEFAULTS.linewidth, label=nothing)
     plot!(size = isnothing(psize) ? (DEFAULTS.width_in*DEFAULTS.dpi,DEFAULTS.height_in*DEFAULTS.dpi) : psize)
     plot!(tickfontsize = DEFAULTS.tickfontsize, guidefontsize = DEFAULTS.guidefontsize, legendfontsize = DEFAULTS.legendfontsize, titlefontsize = DEFAULTS.titlefontsize)
@@ -1742,8 +1749,7 @@ function plots_paper_x(data::Vector{Tuple{String, Vector{Recorder}, Vector{MARXS
 end
 
 function plot_pdf_params(data::Vector{Tuple{String, Vector{Recorder}, Vector{MARXSystem}}}; f_name::Union{Nothing, String}=nothing, psize::Union{Nothing, Tuple}=nothing, xlabel::String="Training size T")
-    #p = plot(xlabel="time [s]", ylabel=latexstring("-\\log p(\\tilde{A}, \\tilde{W} \\mid D_t)"))
-    p = plot(xlabel="time [s]", ylabel=latexstring("-\\log p(\\tilde{\\Theta} \\mid \\mathcal{D}_k)"))
+    p = plot(xlabel="time [s]", ylabel=label_pdf_params_true)
     for (data_label, vrecs, vsys) in data
         N_runs = size(vrecs)[1]
         (D_y, D_x, N) = size(vrecs[1].Ms)
@@ -1764,8 +1770,7 @@ function plot_pdf_params(data::Vector{Tuple{String, Vector{Recorder}, Vector{MAR
 end
 
 function plot_pdf_params(data::Vector{Tuple{String, Vector{Recorder}, Vector{DoubleMassSpringDamperSystem}}}; f_name::Union{Nothing, String}=nothing, psize::Union{Nothing, Tuple}=nothing, xlabel::String="Training size T")
-    #p = plot(xlabel="time [s]", ylabel=latexstring("-\\log p(\\tilde{A}, \\tilde{W} \\mid D_t)"))
-    p = plot(xlabel="time [s]", ylabel=latexstring("-\\log p(\\tilde{\\Theta} \\mid \\mathcal{D}_k)"))
+    p = plot(xlabel="time [s]", ylabel=label_pdf_params_true)
     for (data_label, vrecs, vsys) in data
         N_runs = size(vrecs)[1]
         (D_y, D_x, N) = size(vrecs[1].Ms)
@@ -1948,6 +1953,8 @@ function plot_param_W_timeseries(rec::Recorder; sys::Union{Nothing, System}=noth
     #plot!(size = isnothing(psize) ? (DEFAULTS.width_in*DEFAULTS.dpi,DEFAULTS.height_in*DEFAULTS.dpi) : psize)
     #plot!(tickfontsize = DEFAULTS.tickfontsize, guidefontsize = DEFAULTS.guidefontsize, legendfontsize = DEFAULTS.legendfontsize, titlefontsize = DEFAULTS.titlefontsize)
     #plot!(bottom_margin=8Plots.mm)
+    label = label_pdf_param_W
+    plot!(ylabel=label)
     plot!(size = isnothing(psize) ? (DEFAULTS.width_in*DEFAULTS.dpi,DEFAULTS.height_in*DEFAULTS.dpi) : psize)
     plot!(tickfontsize = DEFAULTS.tickfontsize, titlefontsize = DEFAULTS.titlefontsize, legendfontsize = DEFAULTS.legendfontsize, guidefontsize = DEFAULTS.guidefontsize)
     plot!(bottom_margin=8Plots.mm, left_margin=8Plots.mm)

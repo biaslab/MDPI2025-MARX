@@ -137,7 +137,7 @@ md"## DEBUGGING: Inspecting performance of MARX-UI of a single run for T=$(hyper
 ])
 
 # ╔═╡ 1e78cacd-0b65-4f00-a35b-0247260895d3
-plot_param_W_timeseries(results["MARX-UI"].recs_train[hyperparams_run_UI.run,hyperparams_debug.T], sys=results["MARX-UI"].envs_train[hyperparams_run_UI.run,hyperparams_debug.T], psize=(5*dpi, 2*dpi))
+plot_param_W_timeseries(results["MARX-UI"].recs_train[hyperparams_run_UI.run,hyperparams_debug.T], sys=results["MARX-UI"].envs_train[hyperparams_run_UI.run,hyperparams_debug.T])
 
 # ╔═╡ 24a3f77f-dadf-4706-94b9-b9a7dcf5b16b
 plot_params_A_diff(results["MARX-UI"].envs_train[hyperparams_run_UI.run], results["MARX-UI"].agents[hyperparams_run_UI.run], psize=(4*dpi,0.6dpi), indices=A_indices)
