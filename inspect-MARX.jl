@@ -87,6 +87,9 @@ begin
 	param_norm_W_data = [(label, results[label].recs_train[:, hyperparams_debug.T], results[label].envs_train[:, hyperparams_debug.T]) for label in methods_MARX]
 end
 
+# ╔═╡ c99307a2-cfbf-471e-8a3b-0d4c694ea712
+
+
 # ╔═╡ 9c9729a3-226b-493f-9ee8-4104ff6ff8c5
 plot_pdf_params(pdf_param_data, f_name="figures/$(label_env)-pdf-params.png")
 
@@ -164,6 +167,7 @@ plot_es_posterior(results["MARX-UI"].recs_train[hyperparams_run_UI.run,hyperpara
 # ╟─94836524-fdf7-4bcf-a65a-3343f724a196
 # ╟─7b412a6c-a8a5-4c93-8083-11acbd1e5567
 # ╟─e98d41f6-0d08-4677-b283-d589b7b9c2a5
+# ╠═c99307a2-cfbf-471e-8a3b-0d4c694ea712
 # ╠═9c9729a3-226b-493f-9ee8-4104ff6ff8c5
 # ╠═2792d246-0377-40f7-adf5-ef99d023aa9f
 # ╠═87614be1-7870-444d-b985-8dda3844aa2f

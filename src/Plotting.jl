@@ -101,8 +101,8 @@ label_norm_A = latexstring("||\\tilde{A} - A||_F")
 label_norm_A_log = latexstring("\\log(||\\tilde{A} - A||_F)")
 label_norm_W = latexstring("||\\tilde{W} - W||_F")
 label_norm_W_log = latexstring("\\log(||\\tilde{W} - W||_F)")
-label_pdf_param_A = latexstring("\\log p(\\tilde{A} \\mid \\tilde{W} \\mathcal{D}_k)")
-label_pdf_param_W = latexstring("\\log p(\\tilde{W} \\mid \\mathcal{D}_k)")
+label_pdf_param_A = latexstring("\\log p(A \\mid W, \\mathcal{D}_k)")
+label_pdf_param_W = latexstring("\\log p(W \\mid \\mathcal{D}_k)")
 label_surprisals = latexstring("-\\log p(\\tilde{y}_k \\mid \\mathcal{D}_k)")
 label_es_posterior = latexstring("H[q(\\Theta \\mid \\mathcal{D}_k)]")
 label_ces_posterior_prior = latexstring("H[q(\\Theta \\mid \\mathcal{D}_k), p(\\Theta \\mid \\mathcal{D}_{k-1})]")
@@ -1791,9 +1791,8 @@ function plot_pdf_params(data::Vector{Tuple{String, Vector{Recorder}, Vector{Dou
 end
 
 function plot_pdf_predictive(data::Vector{Tuple{String, Vector{Recorder}, Vector{S}}}; f_name::Union{Nothing, String}=nothing, psize::Union{Nothing, Tuple}=nothing, xlabel::String="Training size T") where {S<:System}
-    #p = plot(xlabel="time [s]", ylabel="-log p(ŷ | Dₜ)")
-    p = plot(xlabel="time [s]", ylabel=label_surprisals) #latexstring("-\\log p(\\tilde{y} \\mid \\mathcal{D}_k)"))
-    for (data_label, vrecs, vsys) in data
+    p = plot(xlabel="time [s]", ylabel=label_surprisals)
+    for (data_abel, vrecs, vsys) in data
         N_runs = size(vrecs)[1]
         (D_y, D_x, N) = size(vrecs[1].Ms)
         pdfs = zeros(N_runs, N)
@@ -1926,7 +1925,7 @@ end
 
 function plot_param_W_timeseries(rec::Recorder; sys::Union{Nothing, System}=nothing, f_name::Union{Nothing, String}=nothing, psize::Union{Nothing, Tuple}=nothing)
     subscripts_digit = ["₁", "₂", "₃", "₄", "₅", "₆", "₇", "₈", "₉"]
-    p = plot(xlabel="time [s]")
+    p = plot(xlabel="time [s]", ylabel=label_pdf_param_W)
     (D_y, D_y, N) = size(rec.Ωs)
     Ws = zeros(D_y, D_y, N)
     std_W = zeros(D_y, D_y, N)
@@ -1953,8 +1952,6 @@ function plot_param_W_timeseries(rec::Recorder; sys::Union{Nothing, System}=noth
     #plot!(size = isnothing(psize) ? (DEFAULTS.width_in*DEFAULTS.dpi,DEFAULTS.height_in*DEFAULTS.dpi) : psize)
     #plot!(tickfontsize = DEFAULTS.tickfontsize, guidefontsize = DEFAULTS.guidefontsize, legendfontsize = DEFAULTS.legendfontsize, titlefontsize = DEFAULTS.titlefontsize)
     #plot!(bottom_margin=8Plots.mm)
-    label = label_pdf_param_W
-    plot!(ylabel=label)
     plot!(size = isnothing(psize) ? (DEFAULTS.width_in*DEFAULTS.dpi,DEFAULTS.height_in*DEFAULTS.dpi) : psize)
     plot!(tickfontsize = DEFAULTS.tickfontsize, titlefontsize = DEFAULTS.titlefontsize, legendfontsize = DEFAULTS.legendfontsize, guidefontsize = DEFAULTS.guidefontsize)
     plot!(bottom_margin=8Plots.mm, left_margin=8Plots.mm)
