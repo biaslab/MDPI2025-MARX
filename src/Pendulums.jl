@@ -125,7 +125,7 @@ function ddzdt(sys::DPendulum, z::Vector{Float64}, dz::Vector{Float64}, u::Vecto
     m1, m2 = sys.mass
     l1, l2 = sys.length
     c1, c2 = sys.damping, sys.damping
-    κ1, κ2 = 0.0, 0.0 # What is this?
+    κ1, κ2 = 0.0, 0.0
     gravity = 9.81
 
     z1mz2 = z1 - z2
